@@ -1,0 +1,53 @@
+name: libp2p-crypto
+version: 0.1.0.0
+homepage: https://github.com/MatrixAI/hs-libp2p-crypto#readme
+license: Apache-2.0
+license-file: LICENSE
+author: CMCDragonkai
+maintainer: roger.qiu@matrix.ai
+category: Web
+extra-source-files:
+- package.yaml
+- README.md
+- stack.yaml
+
+github: MatrixAI/hs-libp2p-crypto
+
+dependencies:
+- base
+
+library:
+  source-dirs: src
+  dependencies:
+  - asn1-encoding
+  - asn1-types
+  - attoparsec
+  - base64-bytestring
+  - bytestring
+  - cryptonite
+  - hprotoc
+  - memory
+  - protocol-buffers
+  - QuickCheck
+  - protocol-buffers-descriptor
+  - sandi
+  - secp256k1
+  - x509
+
+tests:
+  libp2p-crypto-test:
+    source-dirs: test
+    main: Spec.hs
+    ghc-options:
+    - -rtsopts
+    - -threaded
+    - -with-rtsopts=-N
+    dependencies:
+    - libp2p-crypto
+    - attoparsec
+    - bytestring
+    - cereal
+    - cryptonite
+    - memory
+    - QuickCheck
+    - secp256k1
