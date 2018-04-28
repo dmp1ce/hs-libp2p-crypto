@@ -11,11 +11,12 @@ import qualified Crypto.Secp256k1                  as Secp256k1
 data Key
   = RSAPub        RSA.PublicKey
   | RSAPriv       RSA.PrivateKey
-  -- | Ed25519Pub    Ed25519.PublicKey
-  -- | Ed25519Priv   Ed25519.SecretKey
-  -- | Secp256k1Pub  Secp256k1.PubKey
-  -- | Secp256k1Priv Secp256k1.SecKey
   deriving (Show, Eq)
+
+-- | Ed25519Pub    Ed25519.PublicKey
+-- | Ed25519Priv   Ed25519.SecretKey
+-- | Secp256k1Pub  Secp256k1.PubKey
+-- | Secp256k1Priv Secp256k1.SecKey
 
 makeRSAPubKey :: RSA.PublicKey -> Key
 makeRSAPubKey k = RSAPub k
