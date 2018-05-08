@@ -13,8 +13,20 @@ extra-source-files:
 
 github: MatrixAI/hs-libp2p-crypto
 
+ghc-options:
+- -O2
+- -Wall
+- -Wcompat
+- -Werror
+- -Wincomplete-record-updates
+- -Wincomplete-uni-patterns
+- -Wredundant-constraints
+
 dependencies:
 - base
+
+default-extensions:
+- GeneralizedNewtypeDeriving
 
 library:
   source-dirs: src

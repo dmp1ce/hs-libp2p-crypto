@@ -12,14 +12,11 @@ TODO: Long description
 module Crypto.LibP2P.Parse where
 
 import           Crypto.LibP2P.Key
-import qualified Crypto.LibP2P.Protobuf.KeyType    as ProtoKeyType
 import qualified Crypto.LibP2P.Protobuf.PrivateKey as ProtoPrivKey
 import qualified Crypto.LibP2P.Protobuf.PublicKey  as ProtoPubKey
 
 
-import qualified Crypto.PubKey.Ed25519             as Ed25519
 import qualified Crypto.PubKey.RSA                 as RSA
-import qualified Crypto.Secp256k1                  as Secp256k1
 import qualified Data.Attoparsec.ByteString        as Attoparsec
 import qualified Text.ProtocolBuffers.WireMessage  as PB
 import qualified Data.ASN1.Encoding                as ASN1Encoding
@@ -31,17 +28,16 @@ import qualified Data.ByteString.Lazy              as BSL
 import qualified Data.X509                         as X509
 
 import           Data.ASN1.BinaryEncoding          (DER (..))
-import           Crypto.Error                      (eitherCryptoError)
 -- imports ASN1Object instance for RSA.PrivateKey
-import           Crypto.PubKey.RSA.Types           ()
+import           Crypto.PubKey.RSA.Types           (unRSAPrivateKey)
 
 parseKey :: BS.ByteString -> Either String Key
-parseKey bs = 
+parseKey bs =
   Attoparsec.parseOnly keyParsers bs
-  where 
+  where
     keyParsers :: Attoparsec.Parser Key
-    keyParsers = 
-      Attoparsec.choice 
+    keyParsers =
+      Attoparsec.choice
         [ parseRSAPub
         , parseRSAPriv ]
         -- , parseEd25519Pub
@@ -161,7 +157,4 @@ asnToX509 asn =
   $ ASN1Types.fromASN1 asn
 
 asnToRSA :: [ASN1Types.ASN1] -> Either String RSA.PrivateKey
-asnToRSA asn =
-  Bifunctor.second fst
-  $ ASN1Types.fromASN1 asn
-
+asnToRSA asn = (unRSAPrivateKey . fst) <$> ASN1Types.fromASN1 asn

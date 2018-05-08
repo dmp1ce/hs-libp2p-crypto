@@ -1,8 +1,8 @@
 {-# LANGUAGE FlexibleInstances      #-}
-{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE MultiParamTypeClasses  #-}
 {-# LANGUAGE ScopedTypeVariables    #-}
 {-|
-Description : QuickCheck Tests for hs-libp2p-crypto
+Description : Tests for hs-libp2p-crypto
 License     : Apache-2.0
 Maintainer  : quoc.ho@matrix.ai
 Stability   : experimental
@@ -28,51 +28,55 @@ import           Control.Monad              (replicateM)
 import           Crypto.Random.Types        (MonadRandom (..))
 import           Data.Proxy                 (Proxy (..))
 import           Data.Word                  (Word8)
-import           Data.Attoparsec.ByteString (IResult (..))
 import           Test.QuickCheck.Gen        (Gen, chooseAny)
+--import           Test.Tasty
+--import qualified Test.Tasty.QuickCheck      as TQC
 
-instance MonadRandom Gen where
+newtype TestGen a = TestGen { unTestGen :: (Gen a) } deriving (Monad, Functor, Applicative)
+instance MonadRandom TestGen where
   getRandomBytes n = do
-    words <- replicateM n $ (chooseAny :: Gen Word8)
-    return $ BA.pack words
+    w <- TestGen $ replicateM n $ (chooseAny :: Gen Word8)
+    return $ BA.pack w
 
-instance QC.Arbitrary Ed25519.PublicKey where
+newtype Ed25519PublicKey = Ed25519PublicKey Ed25519.PublicKey deriving (Show)
+instance QC.Arbitrary Ed25519PublicKey where
   arbitrary = do
-    sk <- Ed25519.generateSecretKey
-    return $ Ed25519.toPublic sk
+    sk <- unTestGen $ Ed25519.generateSecretKey
+    return $ Ed25519PublicKey $ Ed25519.toPublic sk
 
-instance QC.Arbitrary Ed25519.SecretKey where
+newtype Ed25519SecretKey = Ed25519SecretKey Ed25519.SecretKey deriving (Show)
+instance QC.Arbitrary Ed25519SecretKey where
   arbitrary = do
-    sk <- Ed25519.generateSecretKey
-    return sk
+    sk <- unTestGen $ Ed25519.generateSecretKey
+    return $ Ed25519SecretKey sk
 
-instance QC.Arbitrary RSA.PublicKey where
+newtype RSAPublicKey = RSAPublicKey { unRSAPublicKey :: RSA.PublicKey } deriving (Show)
+instance QC.Arbitrary RSAPublicKey where
   arbitrary = do
-    (pk, sk) <- RSA.generate 128 65537
-    return pk
+    (pk, _) <- unTestGen $ RSA.generate 128 65537
+    return $ RSAPublicKey pk
 
-instance QC.Arbitrary RSA.PrivateKey where
+newtype RSAPrivateKey = RSAPrivateKey { unRSAPrivateKey :: RSA.PrivateKey } deriving (Show)
+instance QC.Arbitrary RSAPrivateKey where
   arbitrary = do
-    (pk, sk) <- RSA.generate 128 65537
-    return sk
+    (_, sk) <- unTestGen $ RSA.generate 128 65537
+    return $ RSAPrivateKey sk
 
-instance QC.Arbitrary Key where
-  arbitrary = do 
-    QC.oneof keys
+newtype TestKey = TestKey Key deriving Show
+instance QC.Arbitrary TestKey where
+  arbitrary = do
+    TestKey <$> QC.oneof keys
       where
         keys :: [Gen Key]
-        keys = 
-          [ QC.arbitrary >>= return . makeRSAPubKey
-          , QC.arbitrary >>= return . makeRSAPrivKey ]
+        keys =
+          [ QC.arbitrary >>= return . makeRSAPubKey . unRSAPublicKey
+          , QC.arbitrary >>= return . makeRSAPrivKey . unRSAPrivateKey ]
           -- , QC.arbitrary >>= return . makeEd25519PubKey
           -- , QC.arbitrary >>= return . makeEd25519PrivKey
           -- , QC.arbitrary >>= return . makeSecp256k1PubKey
           -- , QC.arbitrary >>= return . makeSecp256k1PrivKey ]
 
-prop_KeySignature :: (PrivateKey a b,
-                       Show a,
-                       QC.Arbitrary a) =>
-                       a -> [Word8] -> Bool
+prop_KeySignature :: (PrivateKey a b) => a -> [Word8] -> Bool
 prop_KeySignature sk bytes =
   case verify pk msg sig of
        Left e  -> error e
@@ -84,12 +88,12 @@ prop_KeySignature sk bytes =
                 Left e  -> error e
                 Right s -> s
 
-prop_KeyEncoding :: Key -> Bool
-prop_KeyEncoding k = k == getk2
+prop_KeyEncoding :: TestKey -> Bool
+prop_KeyEncoding (TestKey k) = k == getk2
   where
     getk2 :: Key
     getk2 = case parseKey $ serialize k of
-                 Right k -> k
+                 Right k' -> k'
                  _ -> error "failed"
 
 class (PrivateKey a b, Show a, QC.Arbitrary a) => TestPrivKey a b where
@@ -98,16 +102,24 @@ class (PrivateKey a b, Show a, QC.Arbitrary a) => TestPrivKey a b where
     QC.quickCheck
     $ (prop_KeySignature :: a -> [Word8] -> Bool)
 
-instance TestPrivKey RSA.PrivateKey RSA.PublicKey
-instance TestPrivKey Ed25519.SecretKey Ed25519.PublicKey
+instance PrivateKey RSAPrivateKey RSA.PublicKey where
+  sign (RSAPrivateKey k) d = sign k d
+  toPublic (RSAPrivateKey k) = toPublic k
+instance TestPrivKey RSAPrivateKey RSA.PublicKey
+
+instance PrivateKey Ed25519SecretKey Ed25519.PublicKey where
+  sign (Ed25519SecretKey k) d = sign k d
+  toPublic (Ed25519SecretKey k) = toPublic k
+instance TestPrivKey Ed25519SecretKey Ed25519.PublicKey
+
 instance TestPrivKey Secp256k1.SecKey Secp256k1.PubKey
 
 main :: IO ()
 main = do
   QC.quickCheck $ prop_KeyEncoding
-  
-  testPrivKey (Proxy :: Proxy RSA.PrivateKey)
-  testPrivKey (Proxy :: Proxy Ed25519.SecretKey)
+
+  testPrivKey (Proxy :: Proxy RSAPrivateKey)
+  testPrivKey (Proxy :: Proxy Ed25519SecretKey)
 
   -- TODO: Secp256k1 secret keys require a specific message type
   -- which doesn't test well with our randomly generated bytes

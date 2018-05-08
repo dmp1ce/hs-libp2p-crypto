@@ -18,10 +18,7 @@ import qualified Crypto.PubKey.RSA.PKCS15         as RSAPKCS15
 import qualified Crypto.Secp256k1                 as Secp256k1
 import qualified Data.ByteString                  as BS
 
-import           Control.Exception.Base           (displayException)
 import           Crypto.Error                     (eitherCryptoError)
-import           Data.ByteArray                   (convert)
-import           Text.ProtocolBuffers.WireMessage (messagePut)
 
 class PublicKey a where
   -- verify takes a key, message as bytes, and signature as bytes,

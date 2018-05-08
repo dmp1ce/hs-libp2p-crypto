@@ -5,21 +5,22 @@ import qualified Crypto.PubKey.RSA  as RSA
 import qualified Data.ASN1.Encoding as ASN1Encoding
 import qualified Data.ASN1.Types    as ASN1Types
 
-import           Data.ASN1.BinaryEncoding   (BER(..), DER(..))
+import           Data.ASN1.BinaryEncoding   (BER(..))
 
 -- TODO: For some reason, ASN1Object instances of RSA private key are not
--- included in cryptonite library for Crypto.PubKey.RSA.PKCS15. 
+-- included in cryptonite library for Crypto.PubKey.RSA.PKCS15.
 -- This is likely because the author was trying to seperate the RSA/DSA
 -- public/private keys from the serialized representation defined by PKCS#1.
 -- Unfortunately, we are now left with no way to serialize RSA private keys.
 --
--- For now, introduce an orphan instance of ASN1Object for RSA.PrivateKey here,
+-- For now, introduce an instance of ASN1Object for RSAPrivateKey here,
 -- from the implementation in: https://git.io/v7I4b.
 --
 -- This should be integrated into the cryptonite or crypto-storage library, along with ASN1
 -- representations for other private keys.
-instance ASN1Types.ASN1Object RSA.PrivateKey where
-    toASN1 privKey = \xs -> ASN1Types.Start ASN1Types.Sequence
+newtype RSAPrivateKey = RSAPrivateKey { unRSAPrivateKey :: RSA.PrivateKey }
+instance ASN1Types.ASN1Object RSAPrivateKey where
+    toASN1 (RSAPrivateKey privKey) xs = ASN1Types.Start ASN1Types.Sequence
                           : ASN1Types.IntVal 0
                           : ASN1Types.IntVal (RSA.public_n $ RSA.private_pub privKey)
                           : ASN1Types.IntVal (RSA.public_e $ RSA.private_pub privKey)
@@ -42,8 +43,8 @@ instance ASN1Types.ASN1Object RSA.PrivateKey where
              : ASN1Types.IntVal pexp2
              : ASN1Types.IntVal pcoef
              : ASN1Types.End ASN1Types.Sequence
-             : xs) = Right (privKey, xs)
-        where calculate_modulus n i = if (2 ^ (i * 8)) > n then i else calculate_modulus n (i+1)
+             : xs) = Right (RSAPrivateKey privKey, xs)
+        where calculate_modulus n' i = if (2 ^ (i * 8)) > n' then i else calculate_modulus n' (i+1)
               privKey = RSA.PrivateKey
                         { RSA.private_pub  = RSA.PublicKey { RSA.public_size = calculate_modulus n 1
                                                    , RSA.public_n    = n

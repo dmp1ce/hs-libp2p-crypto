@@ -34,9 +34,9 @@ import           Data.ByteArray                    (convert)
 import           Text.ProtocolBuffers.WireMessage  (messagePut)
 
 -- imports ASN1Object instance for RSA.PrivateKey
-import           Crypto.PubKey.RSA.Types           ()
+import           Crypto.PubKey.RSA.Types           (RSAPrivateKey (RSAPrivateKey))
 
--- TODO: We may be able to get a better implementation by deriving 
+-- TODO: We may be able to get a better implementation by deriving
 -- Generic and other typeclasses here
 class (Eq a) => Serial a where
   serialize :: a -> BS.ByteString
@@ -77,10 +77,10 @@ instance Serial RSA.PrivateKey where
   serialize k =
     encodeProtoPrivate ProtoKeyType.RSA
     $ ASN1Encoding.encodeASN1' DER
-    $ (ASN1Types.toASN1 k) []
+    $ ASN1Types.toASN1 (RSAPrivateKey k) []
 
 -- TODO: GHC Generics may provide the ability to derive this instance
--- automatically based on the constructors, which may give a better 
+-- automatically based on the constructors, which may give a better
 -- implementation, although it may require lifting the wrapped type
 -- GADT style. For now, we derive the instance manually.
 instance Serial Key where
@@ -104,4 +104,3 @@ encodeProtoPrivate kt bs =
   $ messagePut
   $ ProtoPrivKey.PrivateKey kt
   $ BSL.fromStrict bs
-
