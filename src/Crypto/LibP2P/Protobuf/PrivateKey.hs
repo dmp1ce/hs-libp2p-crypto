@@ -1,22 +1,23 @@
-{-# LANGUAGE BangPatterns, DeriveDataTypeable, FlexibleInstances, MultiParamTypeClasses #-}
-{-# OPTIONS_GHC -fno-warn-unused-imports #-}
+{-# LANGUAGE BangPatterns, DeriveDataTypeable, DeriveGeneric, FlexibleInstances, MultiParamTypeClasses #-}
+{-# OPTIONS_GHC  -fno-warn-unused-imports #-}
 module Crypto.LibP2P.Protobuf.PrivateKey (PrivateKey(..)) where
 import Prelude ((+), (/))
 import qualified Prelude as Prelude'
 import qualified Data.Typeable as Prelude'
+import qualified GHC.Generics as Prelude'
 import qualified Data.Data as Prelude'
 import qualified Text.ProtocolBuffers.Header as P'
 import qualified Crypto.LibP2P.Protobuf.KeyType as Crypto.LibP2P.Protobuf (KeyType)
- 
+
 data PrivateKey = PrivateKey{type' :: !(Crypto.LibP2P.Protobuf.KeyType), data' :: !(P'.ByteString)}
-                deriving (Prelude'.Show, Prelude'.Eq, Prelude'.Ord, Prelude'.Typeable, Prelude'.Data)
- 
+                  deriving (Prelude'.Show, Prelude'.Eq, Prelude'.Ord, Prelude'.Typeable, Prelude'.Data, Prelude'.Generic)
+
 instance P'.Mergeable PrivateKey where
   mergeAppend (PrivateKey x'1 x'2) (PrivateKey y'1 y'2) = PrivateKey (P'.mergeAppend x'1 y'1) (P'.mergeAppend x'2 y'2)
- 
+
 instance P'.Default PrivateKey where
   defaultValue = PrivateKey P'.defaultValue P'.defaultValue
- 
+
 instance P'.Wire PrivateKey where
   wireSize ft' self'@(PrivateKey x'1 x'2)
    = case ft' of
@@ -48,22 +49,22 @@ instance P'.Wire PrivateKey where
              8 -> Prelude'.fmap (\ !new'Field -> old'Self{type' = new'Field}) (P'.wireGet 14)
              18 -> Prelude'.fmap (\ !new'Field -> old'Self{data' = new'Field}) (P'.wireGet 12)
              _ -> let (field'Number, wire'Type) = P'.splitWireTag wire'Tag in P'.unknown field'Number wire'Type old'Self
- 
+
 instance P'.MessageAPI msg' (msg' -> PrivateKey) PrivateKey where
   getVal m' f' = f' m'
- 
+
 instance P'.GPB PrivateKey
- 
+
 instance P'.ReflectDescriptor PrivateKey where
   getMessageInfo _ = P'.GetMessageInfo (P'.fromDistinctAscList [8, 18]) (P'.fromDistinctAscList [8, 18])
   reflectDescriptorInfo _
    = Prelude'.read
-      "DescriptorInfo {descName = ProtoName {protobufName = FIName \".Crypto.LibP2P.Protobuf.PrivateKey\", haskellPrefix = [], parentModule = [MName \"Crypto\",MName \"LibP2P\",MName \"Protobuf\"], baseName = MName \"PrivateKey\"}, descFilePath = [\"Crypto\",\"LibP2P\",\"Protobuf\",\"PrivateKey.hs\"], isGroup = False, fields = fromList [FieldInfo {fieldName = ProtoFName {protobufName' = FIName \".Crypto.LibP2P.Protobuf.PrivateKey.Type\", haskellPrefix' = [], parentModule' = [MName \"Crypto\",MName \"LibP2P\",MName \"Protobuf\",MName \"PrivateKey\"], baseName' = FName \"type'\", baseNamePrefix' = \"\"}, fieldNumber = FieldId {getFieldId = 1}, wireTag = WireTag {getWireTag = 8}, packedTag = Nothing, wireTagLength = 1, isPacked = False, isRequired = True, canRepeat = False, mightPack = False, typeCode = FieldType {getFieldType = 14}, typeName = Just (ProtoName {protobufName = FIName \".Crypto.LibP2P.Protobuf.KeyType\", haskellPrefix = [], parentModule = [MName \"Crypto\",MName \"LibP2P\",MName \"Protobuf\"], baseName = MName \"KeyType\"}), hsRawDefault = Nothing, hsDefault = Nothing},FieldInfo {fieldName = ProtoFName {protobufName' = FIName \".Crypto.LibP2P.Protobuf.PrivateKey.Data\", haskellPrefix' = [], parentModule' = [MName \"Crypto\",MName \"LibP2P\",MName \"Protobuf\",MName \"PrivateKey\"], baseName' = FName \"data'\", baseNamePrefix' = \"\"}, fieldNumber = FieldId {getFieldId = 2}, wireTag = WireTag {getWireTag = 18}, packedTag = Nothing, wireTagLength = 1, isPacked = False, isRequired = True, canRepeat = False, mightPack = False, typeCode = FieldType {getFieldType = 12}, typeName = Nothing, hsRawDefault = Nothing, hsDefault = Nothing}], keys = fromList [], extRanges = [], knownKeys = fromList [], storeUnknown = False, lazyFields = False, makeLenses = False}"
- 
+      "DescriptorInfo {descName = ProtoName {protobufName = FIName \".Crypto.LibP2P.Protobuf.PrivateKey\", haskellPrefix = [], parentModule = [MName \"Crypto\",MName \"LibP2P\",MName \"Protobuf\"], baseName = MName \"PrivateKey\"}, descFilePath = [\"Crypto\",\"LibP2P\",\"Protobuf\",\"PrivateKey.hs\"], isGroup = False, fields = fromList [FieldInfo {fieldName = ProtoFName {protobufName' = FIName \".Crypto.LibP2P.Protobuf.PrivateKey.Type\", haskellPrefix' = [], parentModule' = [MName \"Crypto\",MName \"LibP2P\",MName \"Protobuf\",MName \"PrivateKey\"], baseName' = FName \"type'\", baseNamePrefix' = \"\"}, fieldNumber = FieldId {getFieldId = 1}, wireTag = WireTag {getWireTag = 8}, packedTag = Nothing, wireTagLength = 1, isPacked = False, isRequired = True, canRepeat = False, mightPack = False, typeCode = FieldType {getFieldType = 14}, typeName = Just (ProtoName {protobufName = FIName \".Crypto.LibP2P.Protobuf.KeyType\", haskellPrefix = [], parentModule = [MName \"Crypto\",MName \"LibP2P\",MName \"Protobuf\"], baseName = MName \"KeyType\"}), hsRawDefault = Nothing, hsDefault = Nothing},FieldInfo {fieldName = ProtoFName {protobufName' = FIName \".Crypto.LibP2P.Protobuf.PrivateKey.Data\", haskellPrefix' = [], parentModule' = [MName \"Crypto\",MName \"LibP2P\",MName \"Protobuf\",MName \"PrivateKey\"], baseName' = FName \"data'\", baseNamePrefix' = \"\"}, fieldNumber = FieldId {getFieldId = 2}, wireTag = WireTag {getWireTag = 18}, packedTag = Nothing, wireTagLength = 1, isPacked = False, isRequired = True, canRepeat = False, mightPack = False, typeCode = FieldType {getFieldType = 12}, typeName = Nothing, hsRawDefault = Nothing, hsDefault = Nothing}], descOneofs = fromList [], keys = fromList [], extRanges = [], knownKeys = fromList [], storeUnknown = False, lazyFields = False, makeLenses = False}"
+
 instance P'.TextType PrivateKey where
   tellT = P'.tellSubMessage
   getT = P'.getSubMessage
- 
+
 instance P'.TextMsg PrivateKey where
   textPut msg
    = do
