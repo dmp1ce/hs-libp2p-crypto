@@ -61,5 +61,8 @@ tests:
     - cereal
     - cryptonite
     - memory
-    - QuickCheck
     - secp256k1
+    - tasty
+    - tasty-quickcheck
+    - QuickCheck
+    - tasty-hunit
