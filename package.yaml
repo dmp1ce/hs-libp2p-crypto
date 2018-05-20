@@ -66,3 +66,12 @@ tests:
     - tasty-quickcheck
     - QuickCheck
     - tasty-hunit
+benchmarks:
+  libp2p-crypto-bench:
+    source-dirs: bench
+    main: Bench.hs
+    dependencies:
+    - criterion
+    - libp2p-crypto
+    - bytestring
+    - memory
